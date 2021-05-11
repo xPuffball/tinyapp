@@ -33,6 +33,11 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_noindex")
 })
 
+app.post("/urls/:id", (req, res) => {
+  urlDatabase[req.body.shortURL] = req.body.editedURL;
+  res.redirect("/urls")
+})
+
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
@@ -55,6 +60,10 @@ app.get("/u/:shortURL", (req, res) => {
 app.post("/urls/:shortURL/delete", (req, res) => {
   delete urlDatabase[req.params.shortURL];
   res.redirect("/urls")
+})
+
+app.post("/urls/:shortURL/edit", (req, res) => {
+  res.redirect(`/urls/${req.params.shortURL}`)
 })
 
 app.listen(PORT, () => {
