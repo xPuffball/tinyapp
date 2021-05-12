@@ -8,6 +8,11 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 app.set('view engine', 'ejs');
 
+const users = { abcdef: {
+  id: "abcdef",
+  email: "asdf@gmail.com",
+  password: "asdf"
+}};
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
@@ -18,7 +23,8 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = { username: req.cookies.username}
+  let user = users[req.cookies.user_id];
+  const templateVars = { user }
   res.render("urls_new", templateVars);
 })
 
@@ -29,11 +35,12 @@ app.post("/urls", (req, res) => {
 })
 
 app.get("/urls/:shortURL", (req, res) => {
+  let user = users[req.cookies.user_id];
   if (urlDatabase[req.params.shortURL]){
-    const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies.username };
+    const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user};
     res.render("urls_show", templateVars);
   }
-  res.render("urls_noindex", {username: req.cookies.username})
+  res.render("urls_noindex", { user })
 })
 
 app.post("/urls/:id", (req, res) => {
@@ -42,7 +49,8 @@ app.post("/urls/:id", (req, res) => {
 })
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, username: req.cookies.username };
+  let user = users[req.cookies.user_id];
+  const templateVars = { urls: urlDatabase, user };
   res.render("urls_index", templateVars);
 })
 
@@ -82,12 +90,34 @@ app.post("/logout", (req, res) => {
 })
 
 app.get("/register", (req, res) => {
-  res.render("urls_register", {username: req.cookies.username})
+  let user = users[req.cookies.user_id];
+  res.render("urls_register", { user })
+})
+
+app.post("/register", (req, res) => {
+  let userID = generateRandomString();
+  let userEmail = req.body.email; 
+  let userPassword = req.body.password;
+  if ((userID === "" || userEmail === "") || userEmailLookup(userEmail)) {
+    res.sendStatus(400);
+  }
+  users[userID] = { id:userID, email: userEmail, password: userPassword};
+  res.cookie("user_id", userID);
+  res.redirect("/urls")
 })
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+const userEmailLookup = function (email) {
+  for(let user in users) {
+    if(users[user]["email"] === email) {
+      return users[user]["email"];
+    }
+  }
+  return undefined;
+}
 
 const generateRandomString = function() {
   let rdmStr = "";
