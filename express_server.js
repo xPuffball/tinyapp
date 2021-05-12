@@ -14,8 +14,6 @@ const users = { abcdef: {
   password: "asdf"
 }};
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
 };
 
 app.get("/", (req, res) => {
@@ -24,33 +22,52 @@ app.get("/", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   let user = users[req.cookies.user_id];
+  if(!user) {
+    res.redirect("/login")
+  }
   const templateVars = { user }
   res.render("urls_new", templateVars);
 })
 
 app.post("/urls", (req, res) => {
   let urlID = generateRandomString();
-  urlDatabase[urlID] = req.body.longURL;
+  urlDatabase[urlID] = { longURL:req.body.longURL, userID:req.cookies.user_id };
   res.redirect(`/urls/${urlID}`);
 })
 
 app.get("/urls/:shortURL", (req, res) => {
   let user = users[req.cookies.user_id];
-  if (urlDatabase[req.params.shortURL]){
-    const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user};
-    res.render("urls_show", templateVars);
+  if(user) {
+    if (urlDatabase[req.params.shortURL] && urlDatabase[req.params.shortURL]["userID"] === user["id"]){
+      const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user};
+      res.render("urls_show", templateVars);
+    }
+    res.redirect("urls_noperm")
   }
-  res.render("urls_noindex", { user })
+  res.render("urls_noperm", { user })
 })
 
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.body.shortURL] = req.body.editedURL;
-  res.redirect("/urls")
+  let user = users[req.cookies.user_id];
+  if(user) {
+    if (urlDatabase[req.params.id]["userID"] === user["id"]) {
+      urlDatabase[req.body.shortURL] = req.body.editedURL;
+    }
+  }
+  res.redirect("urls_noperm")
 })
 
 app.get("/urls", (req, res) => {
   let user = users[req.cookies.user_id];
-  const templateVars = { urls: urlDatabase, user };
+  let filteredDB = {};
+  if(user) {
+    for (let url in urlDatabase) {
+      if (urlDatabase[url]["userID"] === user["id"]) {
+        filteredDB[url] = urlDatabase[url]
+      }
+    }
+  }
+  const templateVars = { urls: filteredDB, user };
   res.render("urls_index", templateVars);
 })
 
@@ -64,13 +81,18 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => { 
-  const longURL = urlDatabase[req.params.shortURL]
-  res.redirect(longURL);
+  const redirURL = req.params.shortURL;
+  res.redirect(`https://${urlDatabase[redirURL]["longURL"]}`)
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  delete urlDatabase[req.params.shortURL];
-  res.redirect("/urls")
+  let user = users[req.cookies.user_id];
+  if(user) {
+    if (urlDatabase[req.params.id]["userID"] === user["id"]) {
+      delete urlDatabase[req.params.shortURL];
+    }
+  }
+  res.redirect("urls_noperm")
 })
 
 app.post("/urls/:shortURL/edit", (req, res) => {
