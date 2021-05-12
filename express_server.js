@@ -3,6 +3,7 @@ const app = express();
 const PORT = 8080;
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
+const bcrypt = require("bcrypt");
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
@@ -103,7 +104,7 @@ app.post("/login", (req, res) => {
   let email = req.body.email;
   let password = req.body.password;
   if (userEmailLookup(email)) {
-    if(password === userEmailLookup(email).password) {
+    if(bcrypt.compareSync(password, userEmailLookup(email).password)) {
       res.cookie("user_id", userEmailLookup(email).id);
       res.redirect("/urls")
     }
@@ -128,7 +129,7 @@ app.post("/register", (req, res) => {
   if ((userID === "" || userEmail === "") || userEmailLookup(userEmail)) {
     res.sendStatus(400);
   }
-  users[userID] = { id:userID, email: userEmail, password: userPassword};
+  users[userID] = { id:userID, email: userEmail, password: bcrypt.hashSync(userPassword, 10)};
   res.cookie("user_id", userID);
   res.redirect("/urls")
 })
