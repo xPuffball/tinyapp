@@ -78,14 +78,19 @@ app.post("/urls/:shortURL/edit", (req, res) => {
 })
 
 app.post("/login", (req, res) => {
-  let id = req.body.username;
-  res.cookie("username", id);
-  res.redirect("/urls")
+  let email = req.body.email;
+  let password = req.body.password;
+  if (userEmailLookup(email)) {
+    if(password === userEmailLookup(email).password) {
+      res.cookie("user_id", userEmailLookup(email).id);
+      res.redirect("/urls")
+    }
+  }
+  res.sendStatus(403)
 })
 
 app.post("/logout", (req, res) => {
-  let id = req.body.username;
-  res.clearCookie("username");
+  res.clearCookie("user_id");
   res.redirect("/urls");
 })
 
@@ -106,6 +111,12 @@ app.post("/register", (req, res) => {
   res.redirect("/urls")
 })
 
+app.get("/login", (req, res) => {
+  let user = users[req.cookies.user_id];
+  let templateVars = { user }
+  res.render("urls_login", templateVars)
+})
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
@@ -113,7 +124,7 @@ app.listen(PORT, () => {
 const userEmailLookup = function (email) {
   for(let user in users) {
     if(users[user]["email"] === email) {
-      return users[user]["email"];
+      return users[user];
     }
   }
   return undefined;

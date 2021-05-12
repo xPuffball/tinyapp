@@ -11,17 +11,20 @@
       </div>
     </div> 
     <% if (!user) { %> 
-    <div>
+    <!-- <div>
       <form class="d-flex align-items-center" action="/login" method="POST">
         <input class="input" style="padding: 5px; margin-right: 5px" type="text" name="username" placeholder="Username">
         <button class="btn btn-primary" type="submit">Submit</button>
       </form>
+    </div> -->
+    <div style = "width: 9em" class = "d-flex justify-content-around">
+      <a style = "color:white" href="/register">Register</a>
+      <a style = "color:white" href="/login">Login</a>
     </div>
     <% } else { %>
       <div class="d-flex align-items-center">
         <p style="margin: 10px; color: white;">Logged in as: <%= user.email %> </p>
         <form style="border-left: 10px"  action="/logout" method="POST">
-          <input type="hidden" name="username">
           <button class="btn btn-danger" type="submit">Logout</button>
         </form>
       </div>
