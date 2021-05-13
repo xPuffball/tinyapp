@@ -17,7 +17,7 @@
         <p class="card-text"># of Unique Visitors: <%= Object.keys(uniqueVisitors).length %> </p>
       </div>
   </div>
-  <div class="card bg-light mb-3">
+  <div style="margin-bottom: 0px !important;" class="card bg-light mb-3">
     <div class="card-body text-center">
         <h3>Edit</h3>
         <form class="form-group" action="/urls/:id?_method=PUT" method="POST">
@@ -27,6 +27,25 @@
           <button class="btn btn-primary" type="submit">Submit</button>
         </form>
     </div>
+</div>
+<div class="card bg-success text-white"><h3 style="margin: 5px" class="text-center">Visit Logs</h3></div>
+<div class="card text-center">
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th scope="col">Visitor ID</th>
+        <th scope="col">Date Visited</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% for (let i = 0; i < visits.length; i++) { %> 
+        <tr>
+          <td><%= visits[i][1] %></td>
+          <td><%= visits[i][0] %></td>
+        </tr>
+      <% } %> 
+    </tbody>
+  </table>
 </div>
 <div class="text-center"><a href="/urls/new">Shorten a New URL!</a></div>
   <!-- Bootstrap JS -->

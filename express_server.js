@@ -33,7 +33,7 @@ app.get("/", (req, res) => {
 
 app.post("/urls", (req, res) => {
   let urlID = generateRandomString();
-  urlDatabase[urlID] = { longURL:req.body.longURL, userID:req.session.user_id, visitCount: 0, uniqueVisitors: {} };
+  urlDatabase[urlID] = { longURL:req.body.longURL, userID:req.session.user_id, visitCount: 0, uniqueVisitors: {}, visits: [] };
   res.redirect(`/urls/${urlID}`);
 });
 
@@ -64,12 +64,12 @@ app.get("/urls/:shortURL", (req, res) => {
   let user = users[req.session.user_id];
   if (user) {
     if (urlDatabase[req.params.shortURL] && urlDatabase[req.params.shortURL]["userID"] === user["id"]) {
-      const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], visitCount: urlDatabase[req.params.shortURL]["visitCount"], uniqueVisitors: urlDatabase[req.params.shortURL]["uniqueVisitors"], user};
+      const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], visitCount: urlDatabase[req.params.shortURL]["visitCount"], uniqueVisitors: urlDatabase[req.params.shortURL]["uniqueVisitors"], visits: urlDatabase[req.params.shortURL]["visits"], user};
       res.render("urls_show", templateVars);
     }
     res.redirect("/noperms");
   }
-  res.render("/noperms", { user });
+  res.redirect("/noperms");
 });
 
 app.put("/urls/:id", (req, res) => {
@@ -105,7 +105,7 @@ app.get("/u/:shortURL", (req, res) => {
     if (!urlDatabase[redirURL]["uniqueVisitors"][req.session.user_id]) {
       urlDatabase[redirURL]["uniqueVisitors"][req.session.user_id] = req.session.user_id;
     }
-    
+    urlDatabase[redirURL]["visits"].push([Date(Date.now()), generateRandomString()])
     res.redirect(`https://${urlDatabase[redirURL]["longURL"]}`);
   }
   res.redirect("/noindex")
