@@ -18,7 +18,7 @@
   <div class="card bg-light mb-3">
     <div class="card-body text-center">
         <h3>Edit</h3>
-        <form class="form-group" action="/urls/:id" method="POST">
+        <form class="form-group" action="/urls/:id?_method=PUT" method="POST">
           <label for="editedURL">New URL:</label>
           <input type="text" name="editedURL" value=<%= longURL["longURL"] %>>
           <input type="hidden" name="shortURL" value=<%= shortURL %>>

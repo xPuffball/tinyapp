@@ -5,8 +5,10 @@ const bodyParser = require("body-parser");
 const cookieSession = require("cookie-session");
 const bcrypt = require("bcrypt");
 const getUserByEmail = require("./helpers");
+const methodOverride = require('method-override')
 
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(methodOverride('_method'))
 app.use(cookieSession({
   name: 'session',
   keys: ["test"],
@@ -71,7 +73,7 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("/noperms", { user });
 });
 
-app.post("/urls/:id", (req, res) => {
+app.put("/urls/:id", (req, res) => {
   let user = req.session.user_id;
   if (user) {
     if (urlDatabase[req.body.shortURL]["userID"] === user) {
@@ -82,11 +84,11 @@ app.post("/urls/:id", (req, res) => {
   res.redirect("/noperms");
 });
 
-app.post("/urls/:shortURL/edit", (req, res) => {
+app.put("/urls/:shortURL/edit", (req, res) => {
   res.redirect(`/urls/${req.params.shortURL}`);
 });
 
-app.post("/urls/:shortURL/delete", (req, res) => {
+app.delete("/urls/:shortURL/delete", (req, res) => {
   let user = users[req.session.user_id];
   if (user) {
     if (urlDatabase[req.params.shortURL]["userID"] === user["id"]) {
