@@ -2,11 +2,15 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 const bodyParser = require("body-parser");
-const cookieParser = require("cookie-parser");
+const cookieSession = require("cookie-session");
 const bcrypt = require("bcrypt");
+const getUserByEmail = require("./helpers");
 
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ["test"],
+}));
 app.set('view engine', 'ejs');
 
 const users = { abcdef: {
@@ -22,7 +26,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  let user = users[req.cookies.user_id];
+  let user = users[req.session.user_id];
   if(!user) {
     res.redirect("/login")
   }
@@ -32,12 +36,12 @@ app.get("/urls/new", (req, res) => {
 
 app.post("/urls", (req, res) => {
   let urlID = generateRandomString();
-  urlDatabase[urlID] = { longURL:req.body.longURL, userID:req.cookies.user_id };
+  urlDatabase[urlID] = { longURL:req.body.longURL, userID:req.session.user_id };
   res.redirect(`/urls/${urlID}`);
 })
 
 app.get("/urls/:shortURL", (req, res) => {
-  let user = users[req.cookies.user_id];
+  let user = users[req.session.user_id];
   if(user) {
     if (urlDatabase[req.params.shortURL] && urlDatabase[req.params.shortURL]["userID"] === user["id"]){
       const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user};
@@ -49,7 +53,7 @@ app.get("/urls/:shortURL", (req, res) => {
 })
 
 app.post("/urls/:id", (req, res) => {
-  let user = users[req.cookies.user_id];
+  let user = users[req.session.user_id];
   if(user) {
     if (urlDatabase[req.params.id]["userID"] === user["id"]) {
       urlDatabase[req.body.shortURL] = req.body.editedURL;
@@ -59,7 +63,7 @@ app.post("/urls/:id", (req, res) => {
 })
 
 app.get("/urls", (req, res) => {
-  let user = users[req.cookies.user_id];
+  let user = users[req.session.user_id];
   let filteredDB = {};
   if(user) {
     for (let url in urlDatabase) {
@@ -87,9 +91,9 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  let user = users[req.cookies.user_id];
+  let user = users[req.session.user_id];
   if(user) {
-    if (urlDatabase[req.params.id]["userID"] === user["id"]) {
+    if (urlDatabase[req.params.shortURL]["userID"] === user["id"]) {
       delete urlDatabase[req.params.shortURL];
     }
   }
@@ -103,9 +107,9 @@ app.post("/urls/:shortURL/edit", (req, res) => {
 app.post("/login", (req, res) => {
   let email = req.body.email;
   let password = req.body.password;
-  if (userEmailLookup(email)) {
-    if(bcrypt.compareSync(password, userEmailLookup(email).password)) {
-      res.cookie("user_id", userEmailLookup(email).id);
+  if (getUserByEmail(email, users)) {
+    if(bcrypt.compareSync(password, getUserByEmail(email, users).password)) {
+      req.session.user_id = getUserByEmail(email, users).id;
       res.redirect("/urls")
     }
   }
@@ -113,12 +117,12 @@ app.post("/login", (req, res) => {
 })
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
+  req.session = null;
   res.redirect("/urls");
 })
 
 app.get("/register", (req, res) => {
-  let user = users[req.cookies.user_id];
+  let user = users[req.session.user_id];
   res.render("urls_register", { user })
 })
 
@@ -126,16 +130,16 @@ app.post("/register", (req, res) => {
   let userID = generateRandomString();
   let userEmail = req.body.email; 
   let userPassword = req.body.password;
-  if ((userID === "" || userEmail === "") || userEmailLookup(userEmail)) {
+  if ((userID === "" || userEmail === "") || getUserByEmail(userEmail, users)) {
     res.sendStatus(400);
   }
   users[userID] = { id:userID, email: userEmail, password: bcrypt.hashSync(userPassword, 10)};
-  res.cookie("user_id", userID);
+  req.session.user_id = userID;
   res.redirect("/urls")
 })
 
 app.get("/login", (req, res) => {
-  let user = users[req.cookies.user_id];
+  let user = users[req.session.user_id];
   let templateVars = { user }
   res.render("urls_login", templateVars)
 })
@@ -143,15 +147,6 @@ app.get("/login", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
-
-const userEmailLookup = function (email) {
-  for(let user in users) {
-    if(users[user]["email"] === email) {
-      return users[user];
-    }
-  }
-  return undefined;
-}
 
 const generateRandomString = function() {
   let rdmStr = "";
@@ -162,3 +157,4 @@ const generateRandomString = function() {
   }
   return rdmStr;
 }
+
