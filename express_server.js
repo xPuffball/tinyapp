@@ -5,10 +5,10 @@ const bodyParser = require("body-parser");
 const cookieSession = require("cookie-session");
 const bcrypt = require("bcrypt");
 const getUserByEmail = require("./helpers");
-const methodOverride = require('method-override')
+const methodOverride = require('method-override');
 
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(methodOverride('_method'))
+app.use(methodOverride('_method'));
 app.use(cookieSession({
   name: 'session',
   keys: ["test"],
@@ -92,7 +92,7 @@ app.delete("/urls/:shortURL/delete", (req, res) => {
   if (user) {
     if (urlDatabase[req.params.shortURL]["userID"] === user["id"]) {
       delete urlDatabase[req.params.shortURL];
-      res.redirect("/")
+      res.redirect("/");
     }
   }
   res.redirect("/noperms");
@@ -105,21 +105,21 @@ app.get("/u/:shortURL", (req, res) => {
     if (!urlDatabase[redirURL]["uniqueVisitors"][req.session.user_id]) {
       urlDatabase[redirURL]["uniqueVisitors"][req.session.user_id] = req.session.user_id;
     }
-    urlDatabase[redirURL]["visits"].push([Date(Date.now()), generateRandomString()])
+    urlDatabase[redirURL]["visits"].push([Date(Date.now()), generateRandomString()]);
     res.redirect(`https://${urlDatabase[redirURL]["longURL"]}`);
   }
-  res.redirect("/noindex")
+  res.redirect("/noindex");
 });
 
 app.get("/noindex", (req, res) => {
   let user = users[req.session.user_id];
   res.render("urls_noindex", { user });
-})
+});
 
 app.get("/noperms", (req, res) => {
   let user = users[req.session.user_id];
   res.render("urls_noperm", { user });
-})
+});
 
 app.get("/register", (req, res) => {
   let user = users[req.session.user_id];
