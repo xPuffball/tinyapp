@@ -5,8 +5,11 @@ TinyApp is a full stack web application built with Node and Express that allows 
 ## Final Product
 
 !["Register Page for TinyApp"](https://github.com/xPuffball/tinyapp/blob/master/docs/register_page.png?raw=true)
+Register Page
 !["Edit Page for a TinyApp URL, where you can track visitors and edit your URL"](https://github.com/xPuffball/tinyapp/blob/master/docs/url_edit_page.png?raw=true)
+URL Editing Page
 !["Main URLs page for TinyApp"](https://github.com/xPuffball/tinyapp/blob/master/docs/urls_index.png?raw=true)
+Your URLs Page
 
 ## Dependencies
 
