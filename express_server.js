@@ -22,7 +22,10 @@ const urlDatabase = {
 };
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  if (req.session.user_id) {
+    res.redirect("/urls")
+  }
+  res.redirect("/login");
 });
 
 app.get("/urls/new", (req, res) => {
