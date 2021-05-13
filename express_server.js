@@ -33,7 +33,7 @@ app.get("/", (req, res) => {
 
 app.post("/urls", (req, res) => {
   let urlID = generateRandomString();
-  urlDatabase[urlID] = { longURL:req.body.longURL, userID:req.session.user_id };
+  urlDatabase[urlID] = { longURL:req.body.longURL, userID:req.session.user_id, visitCount: 0, uniqueVisitors: {} };
   res.redirect(`/urls/${urlID}`);
 });
 
@@ -53,7 +53,6 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   let user = users[req.session.user_id];
-  console.log(user);
   if (!user) {
     res.redirect("/login");
   }
@@ -65,7 +64,7 @@ app.get("/urls/:shortURL", (req, res) => {
   let user = users[req.session.user_id];
   if (user) {
     if (urlDatabase[req.params.shortURL] && urlDatabase[req.params.shortURL]["userID"] === user["id"]) {
-      const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user};
+      const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], visitCount: urlDatabase[req.params.shortURL]["visitCount"], uniqueVisitors: urlDatabase[req.params.shortURL]["uniqueVisitors"], user};
       res.render("urls_show", templateVars);
     }
     res.redirect("/noperms");
@@ -102,6 +101,11 @@ app.delete("/urls/:shortURL/delete", (req, res) => {
 app.get("/u/:shortURL", (req, res) => {
   const redirURL = req.params.shortURL;
   if (urlDatabase[redirURL]) {
+    urlDatabase[redirURL]["visitCount"] += 1;
+    if (!urlDatabase[redirURL]["uniqueVisitors"][req.session.user_id]) {
+      urlDatabase[redirURL]["uniqueVisitors"][req.session.user_id] = req.session.user_id;
+    }
+    
     res.redirect(`https://${urlDatabase[redirURL]["longURL"]}`);
   }
   res.redirect("/noindex")
